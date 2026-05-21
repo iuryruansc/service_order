@@ -8,6 +8,8 @@ from alembic import context
 from app.core.database import Base
 from app.models.user import User
 from app.models.client import Client
+from app.models.service_order import ServiceOrder
+from app.models.service_order_history import ServiceOrderHistory
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
