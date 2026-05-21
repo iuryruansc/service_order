@@ -5,6 +5,7 @@ from app.api.deps import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from app.services.user_service import register_user
+from app.repositories.user_repository import get_users
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -20,4 +21,4 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     
 @router.get("/", response_model=list[UserRead])
 def list_users(db: Session = Depends(get_db)):
-    return db.query(User).all()
+    return get_users(db)
