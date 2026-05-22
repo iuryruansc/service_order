@@ -10,6 +10,7 @@ from app.repositories.service_order_repository import (
 from app.schemas.service_order import ServiceOrderCreate, ServiceOrderRead, ServiceOrderStatusUpdate
 from app.schemas.service_order_history import ServiceOrderHistoryRead
 from app.services.service_order_service import change_service_order_status, register_service_order
+from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
 router = APIRouter(prefix="/service-orders", tags=["service-orders"])
 
@@ -30,10 +31,20 @@ def create_service_order(
 
 @router.get("/", response_model=list[ServiceOrderRead])
 def list_service_orders(
+    status: ServiceOrderStatus | None = None,
+    priority: ServiceOrderPriority | None = None,
+    client_id: int | None = None,
+    responsible_user_id: int | None = None,
     db: Session = Depends(get_db),
     _authenticated_user=Depends(get_current_user)
 ):
-    return get_service_orders(db)
+    return get_service_orders(
+        db=db,
+        status=status,
+        priority=priority,
+        client_id=client_id,
+        responsible_user_id=responsible_user_id
+    )
 
 @router.get("/{service_order_id}", response_model=ServiceOrderRead)
 def get_service_order(

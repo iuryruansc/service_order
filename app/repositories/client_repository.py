@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy.orm import Session 
 
 from app.models.client import Client
@@ -24,5 +22,5 @@ def create_client(db: Session, client_data: ClientCreate):
 
     return client
 
-def get_clients(db: Session) -> List[Client]:
+def get_clients(db: Session) -> list[Client]:
     return db.query(Client).all()

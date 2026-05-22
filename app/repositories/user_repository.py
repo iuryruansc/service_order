@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy.orm import Session 
 
 from app.models.user import User
@@ -24,5 +22,5 @@ def create_user(db: Session, user_data: UserCreate, hashed_password: str):
 
     return user
 
-def get_users(db: Session) -> List[User]:
+def get_users(db: Session) -> list[User]:
     return db.query(User).all()

@@ -1,10 +1,8 @@
-from typing import List
-
 from sqlalchemy.orm import Session
 
 from app.models.service_order import ServiceOrder
 from app.schemas.service_order import ServiceOrderCreate
-from app.utils.enums import ServiceOrderStatus
+from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
 def create_service_order(db: Session,service_order_data: ServiceOrderCreate,) -> ServiceOrder:
     service_order = ServiceOrder(
@@ -21,8 +19,29 @@ def create_service_order(db: Session,service_order_data: ServiceOrderCreate,) ->
 
     return service_order
 
-def get_service_orders(db: Session) -> List[ServiceOrder]:
-    return db.query(ServiceOrder).all()
+def get_service_orders(
+        db: Session, 
+        status: ServiceOrderStatus | None = None,
+        priority: ServiceOrderPriority | None = None,
+        client_id: int | None = None,
+        responsible_user_id: int | None = None
+) -> list[ServiceOrder]:
+    query = db.query(ServiceOrder)
+
+    if status is not None:
+        query = query.filter(ServiceOrder.status == status)
+
+    if priority is not None:
+        query = query.filter(ServiceOrder.priority == priority)
+
+    if client_id is not None:
+        query = query.filter(ServiceOrder.client_id == client_id)
+
+    if responsible_user_id is not None:
+        query = query.filter(ServiceOrder.responsible_user_id == responsible_user_id)
+
+    return query.all()
+
 
 def get_service_order_by_id(db: Session, service_order_id: int) -> ServiceOrder:
     return db.query(ServiceOrder).filter(ServiceOrder.id == service_order_id).first()

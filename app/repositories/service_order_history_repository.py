@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy.orm import Session
 
 from app.models.service_order_history import ServiceOrderHistory
@@ -30,7 +28,7 @@ def create_service_order_history(
 def get_history_by_service_order_id(
     db: Session,
     service_order_id: int,
-) -> List[ServiceOrderHistory]:
+) -> list[ServiceOrderHistory]:
     return (
         db.query(ServiceOrderHistory)
         .filter(ServiceOrderHistory.service_order_id == service_order_id)
