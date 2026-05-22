@@ -7,6 +7,24 @@ from app.repositories.user_repository import get_user_by_id
 from app.schemas.service_order import ServiceOrderCreate
 from app.utils.enums import ServiceOrderStatus
 
+ALLOWED_STATUS_TRANSITIONS = {
+    ServiceOrderStatus.OPEN: {
+        ServiceOrderStatus.IN_PROGRESS,
+        ServiceOrderStatus.CANCELED,
+    },
+    ServiceOrderStatus.IN_PROGRESS: {
+        ServiceOrderStatus.WAITING,
+        ServiceOrderStatus.DONE,
+        ServiceOrderStatus.CANCELED,
+    },
+    ServiceOrderStatus.WAITING: {
+        ServiceOrderStatus.IN_PROGRESS,
+        ServiceOrderStatus.CANCELED,
+    },
+    ServiceOrderStatus.DONE: set(),
+    ServiceOrderStatus.CANCELED: set(),
+}
+
 def register_service_order(db: Session, service_order_data: ServiceOrderCreate):
     client = get_client_by_id(db, service_order_data.client_id)
 
@@ -29,6 +47,12 @@ def change_service_order_status(db: Session, service_order_id: int, new_status: 
     if not service_order:
         raise ValueError("Service order not found with the provided ID")
     
+    if new_status == service_order.status:
+        raise ValueError("Service order already has this status")
+
+    if new_status not in ALLOWED_STATUS_TRANSITIONS.get(service_order.status, set()):
+        raise ValueError("Invalid status transition")
+
     create_service_order_history(
         db=db,
         service_order_id=service_order_id,

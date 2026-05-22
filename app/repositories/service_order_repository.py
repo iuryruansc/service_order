@@ -24,7 +24,10 @@ def get_service_orders(
         status: ServiceOrderStatus | None = None,
         priority: ServiceOrderPriority | None = None,
         client_id: int | None = None,
-        responsible_user_id: int | None = None
+        responsible_user_id: int | None = None,
+        skip: int = 0,
+        limit: int = 10
+
 ) -> list[ServiceOrder]:
     query = db.query(ServiceOrder)
 
@@ -40,7 +43,13 @@ def get_service_orders(
     if responsible_user_id is not None:
         query = query.filter(ServiceOrder.responsible_user_id == responsible_user_id)
 
-    return query.all()
+    return (
+        query
+        .order_by(ServiceOrder.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def get_service_order_by_id(db: Session, service_order_id: int) -> ServiceOrder:

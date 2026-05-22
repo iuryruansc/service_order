@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -35,6 +35,8 @@ def list_service_orders(
     priority: ServiceOrderPriority | None = None,
     client_id: int | None = None,
     responsible_user_id: int | None = None,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db),
     _authenticated_user=Depends(get_current_user)
 ):
@@ -43,8 +45,10 @@ def list_service_orders(
         status=status,
         priority=priority,
         client_id=client_id,
-        responsible_user_id=responsible_user_id
-    )
+        responsible_user_id=responsible_user_id,
+        skip=skip,
+        limit=limit
+    ) 
 
 @router.get("/{service_order_id}", response_model=ServiceOrderRead)
 def get_service_order(
