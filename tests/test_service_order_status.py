@@ -22,3 +22,19 @@ def test_same_status_is_not_allowed():
             ServiceOrderStatus.OPEN,
             ServiceOrderStatus.OPEN,
         )
+
+@pytest.mark.parametrize(
+    ("current_status", "new_status"),
+    [
+        (ServiceOrderStatus.OPEN, ServiceOrderStatus.IN_PROGRESS),
+        (ServiceOrderStatus.OPEN, ServiceOrderStatus.CANCELED),
+        (ServiceOrderStatus.IN_PROGRESS, ServiceOrderStatus.WAITING),
+        (ServiceOrderStatus.IN_PROGRESS, ServiceOrderStatus.DONE),
+        (ServiceOrderStatus.IN_PROGRESS, ServiceOrderStatus.CANCELED),
+        (ServiceOrderStatus.WAITING, ServiceOrderStatus.IN_PROGRESS),
+        (ServiceOrderStatus.WAITING, ServiceOrderStatus.CANCELED),
+    ],
+)
+
+def test_allowed_status_transitions(current_status, new_status):
+    validate_status_transition(current_status, new_status)
