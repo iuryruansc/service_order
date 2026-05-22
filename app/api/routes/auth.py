@@ -7,6 +7,7 @@ from app.schemas.auth import LoginRequest, Token
 from app.services.auth_service import authenticate_user
 from app.core.security import create_access_token
 from app.schemas.user import UserRead
+from app.utils.exceptions import ForbiddenError, UnauthorizedError
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -22,9 +23,14 @@ def login(
 
     try:
         user = authenticate_user(db, login_data)
-    except ValueError as error:
+    except UnauthorizedError as error:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(error),
+        ) from error
+    except ForbiddenError as error:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=str(error),
         ) from error
 

@@ -11,6 +11,7 @@ from app.schemas.service_order import ServiceOrderCreate, ServiceOrderRead, Serv
 from app.schemas.service_order_history import ServiceOrderHistoryRead
 from app.services.service_order_service import change_service_order_status, register_service_order
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
+from app.utils.exceptions import BusinessRuleError, NotFoundError
 
 router = APIRouter(prefix="/service-orders", tags=["service-orders"])
 
@@ -22,12 +23,16 @@ def create_service_order(
 ):
     try:
         return register_service_order(db, service_order_data)
-    except ValueError as error:
+    except NotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=str(error)
+        ) from error
+    except BusinessRuleError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=str(error)
         ) from error
-    
 
 @router.get("/", response_model=list[ServiceOrderRead])
 def list_service_orders(
@@ -81,7 +86,12 @@ def update_service_order_status(
             current_user_id=current_user.id, 
             note=status_update.note,
         )
-    except ValueError as error:
+    except NotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=str(error)
+        ) from error
+    except BusinessRuleError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=str(error)

@@ -66,7 +66,7 @@ def test_get_service_order_by_id_not_found_returns_404(client, auth_token):
     )
     assert response.status_code == 404
 
-def test_create_service_order_with_invalid_client_id_returns_400(client, auth_token, created_user):
+def test_create_service_order_with_invalid_client_id_returns_404(client, auth_token, created_user):
     headers = {"Authorization": f"Bearer {auth_token}"}
     payload = {
         "title": "Test Service Order",
@@ -81,9 +81,9 @@ def test_create_service_order_with_invalid_client_id_returns_400(client, auth_to
         json=payload,
         headers=headers
     )
-    assert response.status_code == 400
+    assert response.status_code == 404
 
-def test_create_service_order_with_invalid_user_id_returns_400(client, auth_token, created_client):
+def test_create_service_order_with_invalid_user_id_returns_404(client, auth_token, created_client):
     headers = {"Authorization": f"Bearer {auth_token}"}
     payload = {
         "title": "Test Service Order",
@@ -98,7 +98,7 @@ def test_create_service_order_with_invalid_user_id_returns_400(client, auth_toke
         json=payload,
         headers=headers
     )
-    assert response.status_code == 400
+    assert response.status_code == 404
 
 def test_get_service_order_history_returns_200(client, auth_token, created_service_order):
     headers = {"Authorization": f"Bearer {auth_token}"}

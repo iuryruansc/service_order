@@ -6,6 +6,7 @@ from app.repositories.client_repository import get_client_by_id
 from app.repositories.user_repository import get_user_by_id
 from app.schemas.service_order import ServiceOrderCreate
 from app.utils.enums import ServiceOrderStatus
+from app.utils.exceptions import NotFoundError, BusinessRuleError
 
 ALLOWED_STATUS_TRANSITIONS = {
     ServiceOrderStatus.OPEN: {
@@ -29,12 +30,12 @@ def register_service_order(db: Session, service_order_data: ServiceOrderCreate):
     client = get_client_by_id(db, service_order_data.client_id)
 
     if not client:
-        raise ValueError("Client not found with the provided ID")
+        raise NotFoundError("Client not found with the provided ID")
     
     responsible_user = get_user_by_id(db, service_order_data.responsible_user_id)
 
     if not responsible_user:
-        raise ValueError("Responsible user not found with the provided ID")
+        raise NotFoundError("Responsible user not found with the provided ID")
 
     return create_service_order(
         db=db, 
@@ -45,7 +46,7 @@ def change_service_order_status(db: Session, service_order_id: int, new_status: 
     service_order = get_service_order_by_id(db, service_order_id)
 
     if not service_order:
-        raise ValueError("Service order not found with the provided ID")
+        raise NotFoundError("Service order not found with the provided ID")
     
     validate_status_transition(service_order.status, new_status)
 
@@ -65,7 +66,7 @@ def validate_status_transition(
     new_status: ServiceOrderStatus,
 ) -> None:
     if new_status == current_status:
-        raise ValueError("Service order already has this status")
+        raise BusinessRuleError("Service order already has this status")
 
     if new_status not in ALLOWED_STATUS_TRANSITIONS.get(current_status, set()):
-        raise ValueError("Invalid status transition")
+        raise BusinessRuleError("Invalid status transition")

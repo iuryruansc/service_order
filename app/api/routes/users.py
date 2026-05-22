@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from app.services.user_service import register_user
 from app.repositories.user_repository import get_users
+from app.utils.exceptions import BusinessRuleError
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     try:
         return register_user(db, user_data)
-    except ValueError as error:
+    except BusinessRuleError as error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(error)
