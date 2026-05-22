@@ -47,11 +47,7 @@ def change_service_order_status(db: Session, service_order_id: int, new_status: 
     if not service_order:
         raise ValueError("Service order not found with the provided ID")
     
-    if new_status == service_order.status:
-        raise ValueError("Service order already has this status")
-
-    if new_status not in ALLOWED_STATUS_TRANSITIONS.get(service_order.status, set()):
-        raise ValueError("Invalid status transition")
+    validate_status_transition(service_order.status, new_status)
 
     create_service_order_history(
         db=db,
@@ -63,3 +59,13 @@ def change_service_order_status(db: Session, service_order_id: int, new_status: 
     )
 
     return update_service_order_status(db, service_order, new_status)
+
+def validate_status_transition(
+    current_status: ServiceOrderStatus,
+    new_status: ServiceOrderStatus,
+) -> None:
+    if new_status == current_status:
+        raise ValueError("Service order already has this status")
+
+    if new_status not in ALLOWED_STATUS_TRANSITIONS.get(current_status, set()):
+        raise ValueError("Invalid status transition")
