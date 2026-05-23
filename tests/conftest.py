@@ -110,3 +110,12 @@ def admin_token(client):
     })
 
     return response.json()["access_token"]
+
+@pytest.fixture()
+def created_attachment(client, auth_token, created_service_order):
+    response = client.post(
+        f"/service-orders/{created_service_order['id']}/attachments/",
+        files={"file": ("test.jpg", b"fake image content", "image/jpeg")},
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    return response.json()
