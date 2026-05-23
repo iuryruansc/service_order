@@ -19,6 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    userrole = sa.Enum("admin", "user", name="userrole")
+    userrole.create(op.get_bind(), checkfirst=True)
+
     with op.batch_alter_table("users") as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -29,7 +32,8 @@ def upgrade() -> None:
             )
         )
 
-
 def downgrade() -> None:
     with op.batch_alter_table("users") as batch_op:
         batch_op.drop_column("role")
+
+    sa.Enum(name="userrole").drop(op.get_bind(), checkfirst=True)
