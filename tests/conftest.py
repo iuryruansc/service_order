@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from app.api.deps import get_db
 from app.core.database import Base
 from app.main import app
+from app.models.user import User
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
@@ -88,3 +89,24 @@ def created_service_order(client, auth_token, created_client, created_user):
         headers={"Authorization": f"Bearer {auth_token}"},
     )
     return response.json()
+
+@pytest.fixture()
+def admin_token(client):
+    client.post("/users/", json={
+        "name": "Admin",
+        "email": "admin@email.com",
+        "password": "123456",
+    })
+
+    session = TestingSessionLocal()
+    user = session.query(User).filter_by(email="admin@email.com").first()
+    user.role = "admin"
+    session.commit()
+    session.close()
+
+    response = client.post("/auth/login", data={
+        "username": "admin@email.com",
+        "password": "123456",
+    })
+
+    return response.json()["access_token"]

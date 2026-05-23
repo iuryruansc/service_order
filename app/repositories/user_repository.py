@@ -24,3 +24,15 @@ def create_user(db: Session, user_data: UserCreate, hashed_password: str):
 
 def get_users(db: Session) -> list[User]:
     return db.query(User).all()
+
+def activate_user_repo(db: Session, user: User) -> User:
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
+    return user
+
+def deactivate_user_repo(db: Session, user: User) -> User:
+    user.is_active = False
+    db.commit()
+    db.refresh(user)
+    return user

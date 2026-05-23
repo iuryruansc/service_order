@@ -10,7 +10,7 @@ from app.utils.enums import ServiceOrderStatus
 from app.repositories.user_repository import get_user_by_email
 from app.repositories.client_repository import get_client_by_email
 from app.repositories.service_order_repository import get_service_orders
-
+from app.utils.enums import UserRole
 
 db = SessionLocal()
 
@@ -27,6 +27,8 @@ try:
             password="123456"
         )
         user = register_user(db, user_data)
+        user.role = UserRole.ADMIN
+        db.commit()
         print(f"Admin user created: {user.email}")
     else:
         user = existing_user

@@ -12,3 +12,7 @@ class ServiceOrderPriority(StrEnum):
     MEDIUM = "medium"
     HIGH = "high"
     URGENT = "urgent"
+
+class UserRole(StrEnum):
+    ADMIN = "admin"
+    USER = "user"
