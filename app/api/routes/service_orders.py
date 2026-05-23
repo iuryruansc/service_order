@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
-import io
 
 from app.api.deps import get_current_user, get_db, get_current_admin
 from app.repositories.service_order_history_repository import get_history_by_service_order_id
@@ -13,19 +12,29 @@ from app.schemas.service_order import ServiceOrderCreate, ServiceOrderRead, Serv
 from app.schemas.service_order_history import ServiceOrderHistoryRead
 from app.services.service_order_service import change_service_order_status, register_service_order
 from app.services.export_service import export_to_excel, export_to_pdf
+from app.services.email_service import send_order_created_email, send_status_changed_email, send_order_canceled_email
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus, ExportFormat
 from app.utils.exceptions import BusinessRuleError, NotFoundError
 
 router = APIRouter(prefix="/service-orders", tags=["service-orders"])
 
 @router.post("/", response_model=ServiceOrderRead, status_code=status.HTTP_201_CREATED)
-def create_service_order(
+async def create_service_order(
     service_order_data: ServiceOrderCreate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
     try:
-        return register_service_order(db, service_order_data)
+        order = register_service_order(db, service_order_data)
+
+        await send_order_created_email(
+            responsible_email=order.responsible_user.email,
+            responsible_name=order.responsible_user.name,
+            order_title=order.title,
+            order_id=order.id,
+        )
+
+        return order
     except NotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -57,6 +66,53 @@ def list_service_orders(
         skip=skip,
         limit=limit
     ) 
+
+@router.patch("/{service_order_id}/status", response_model=ServiceOrderRead)
+async def update_service_order_status(
+    service_order_id: int,
+    status_update: ServiceOrderStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    try:
+        old_order = get_service_order_by_id(db, service_order_id)
+        old_status = old_order.status
+        order = change_service_order_status(
+            db=db, 
+            service_order_id=service_order_id, 
+            new_status=status_update.status, 
+            current_user_id=current_user.id, 
+            note=status_update.note,
+        )
+
+        if order.status == ServiceOrderStatus.CANCELED:
+            await send_order_canceled_email(
+                client_email=order.client.email,
+                client_name=order.client.name,
+                order_title=order.title,
+                order_id=order.id,
+            )
+        else:
+            await send_status_changed_email(
+                responsible_email=current_user.email,
+                responsible_name=current_user.name,
+                order_title=order.title,
+                order_id=order.id,
+                old_status=old_status,
+                new_status=status_update.status 
+            )
+
+        return order
+    except NotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=str(error)
+        ) from error
+    except BusinessRuleError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(error)
+        ) from error
 
 @router.get("/export")
 def export_service_orders(

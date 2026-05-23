@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.service_order import ServiceOrder
 from app.schemas.service_order import ServiceOrderCreate
@@ -17,7 +17,7 @@ def create_service_order(db: Session,service_order_data: ServiceOrderCreate,) ->
     db.commit()
     db.refresh(service_order)
 
-    return service_order
+    return get_service_order_by_id(db, service_order.id)
 
 def get_service_orders(
         db: Session, 
@@ -53,7 +53,15 @@ def get_service_orders(
 
 
 def get_service_order_by_id(db: Session, service_order_id: int) -> ServiceOrder:
-    return db.query(ServiceOrder).filter(ServiceOrder.id == service_order_id).first()
+    return (
+        db.query(ServiceOrder)
+        .options(
+            joinedload(ServiceOrder.client),
+            joinedload(ServiceOrder.responsible_user),
+        )
+        .filter(ServiceOrder.id == service_order_id)
+        .first()
+    )
 
 def update_service_order_status(db: Session, service_order: ServiceOrder, new_status: ServiceOrderStatus) -> ServiceOrder:
     service_order.status = new_status

@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.user import User
 
 from app.core.database import Base
 from app.utils.enums import ServiceOrderStatus
@@ -35,3 +37,5 @@ class ServiceOrderHistory(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+
+    responsible_user: Mapped["User"] = relationship("User")
