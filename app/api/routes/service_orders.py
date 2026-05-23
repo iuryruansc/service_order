@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from fastapi.responses import StreamingResponse
+import io
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, get_current_admin
 from app.repositories.service_order_history_repository import get_history_by_service_order_id
 from app.repositories.service_order_repository import (
     get_service_order_by_id,
@@ -10,7 +12,8 @@ from app.repositories.service_order_repository import (
 from app.schemas.service_order import ServiceOrderCreate, ServiceOrderRead, ServiceOrderStatusUpdate
 from app.schemas.service_order_history import ServiceOrderHistoryRead
 from app.services.service_order_service import change_service_order_status, register_service_order
-from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
+from app.services.export_service import export_to_excel, export_to_pdf
+from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus, ExportFormat
 from app.utils.exceptions import BusinessRuleError, NotFoundError
 
 router = APIRouter(prefix="/service-orders", tags=["service-orders"])
@@ -54,6 +57,27 @@ def list_service_orders(
         skip=skip,
         limit=limit
     ) 
+
+@router.get("/export")
+def export_service_orders(
+    format: ExportFormat,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin),
+):
+    if format == ExportFormat.EXCEL:
+        file_content = export_to_excel(db, exported_by=current_user.email)
+        return StreamingResponse(
+            file_content,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=orders.xlsx"},
+        )
+    
+    file_content = export_to_pdf(db, exported_by=current_user.email)
+    return StreamingResponse(
+        file_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=orders.pdf"}
+    )
 
 @router.get("/{service_order_id}", response_model=ServiceOrderRead)
 def get_service_order(

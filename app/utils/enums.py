@@ -16,3 +16,7 @@ class ServiceOrderPriority(StrEnum):
 class UserRole(StrEnum):
     ADMIN = "admin"
     USER = "user"
+
+class ExportFormat(StrEnum):
+    PDF = "pdf"
+    EXCEL = "excel"

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_admin, get_db
 from app.schemas.user import UserCreate, UserRead
 from app.services.user_service import register_user, activate_user, deactivate_user
-from app.repositories.user_repository import get_users, get_user_by_id
+from app.repositories.user_repository import get_users
 from app.utils.exceptions import BusinessRuleError, NotFoundError
 
 router = APIRouter(prefix="/users", tags=["users"])
