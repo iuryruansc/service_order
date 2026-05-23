@@ -1,4 +1,5 @@
 import os
+import uuid
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 from app.repositories.attachment_repository import create_attachment, get_attachment_by_id, delete_attachment
@@ -28,7 +29,7 @@ async def upload_attachment(
         raise BusinessRuleError("File too large. Maximum size is 5MB")
 
     os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{file.filename}"
+    file_path = f"uploads/{uuid.uuid4().hex}{ext}"
     with open(file_path, "wb") as f:
         f.write(content)
 

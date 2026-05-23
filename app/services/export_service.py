@@ -45,14 +45,12 @@ def export_to_pdf(db: Session, exported_by: str) -> io.BytesIO:
     pdf.add_page()
     pdf.set_font("Helvetica", size=10)
 
-    # titulo
     pdf.set_font("Helvetica", style="B", size=14)
     pdf.cell(0, 10, "Relatório de Ordens de Serviço", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
     pdf.set_font("Helvetica", size=8)
     pdf.cell(0, 6, f"Exportado por: {exported_by}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
     pdf.ln(5)
 
-    # cabeçalho
     pdf.set_font("Helvetica", style="B", size=8)
     headers = ["ID", "Título", "Status", "Prioridade", "Cliente", "Responsável", "Data"]
     widths = [10, 50, 25, 25, 25, 25, 25]
@@ -61,7 +59,6 @@ def export_to_pdf(db: Session, exported_by: str) -> io.BytesIO:
         pdf.cell(width, 7, header, border=1)
     pdf.ln()
 
-    # dados
     pdf.set_font("Helvetica", size=8)
     for order in orders:
         values = [

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_current_admin, get_db
-from app.repositories.attachment_repository import get_attachments_by_service_order, get_attachment_by_id
+from app.repositories.attachment_repository import get_attachments_by_service_order
 from app.schemas.attachment import AttachmentRead
 from app.services.attachment_service import upload_attachment, remove_attachment
 from app.utils.exceptions import NotFoundError, BusinessRuleError

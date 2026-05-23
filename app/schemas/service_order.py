@@ -6,7 +6,7 @@ from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
 class ServiceOrderBase(BaseModel):
     title: str
-    description: str
+    description: str | None = None
     priority: ServiceOrderPriority = ServiceOrderPriority.MEDIUM
 
 class ServiceOrderCreate(ServiceOrderBase):

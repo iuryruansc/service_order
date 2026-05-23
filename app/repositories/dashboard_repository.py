@@ -1,7 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-
 from app.models.service_order import ServiceOrder
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 

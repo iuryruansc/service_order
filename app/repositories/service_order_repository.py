@@ -4,7 +4,7 @@ from app.models.service_order import ServiceOrder
 from app.schemas.service_order import ServiceOrderCreate
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
-def create_service_order(db: Session,service_order_data: ServiceOrderCreate,) -> ServiceOrder:
+def create_service_order(db: Session,service_order_data: ServiceOrderCreate) -> ServiceOrder:
     service_order = ServiceOrder(
         title=service_order_data.title,
         description=service_order_data.description,

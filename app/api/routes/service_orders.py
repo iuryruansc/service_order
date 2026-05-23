@@ -67,6 +67,43 @@ def list_service_orders(
         limit=limit
     ) 
 
+@router.get("/export")
+def export_service_orders(
+    format: ExportFormat,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_admin),
+):
+    if format == ExportFormat.EXCEL:
+        file_content = export_to_excel(db, exported_by=current_user.email)
+        return StreamingResponse(
+            file_content,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=orders.xlsx"},
+        )
+    
+    file_content = export_to_pdf(db, exported_by=current_user.email)
+    return StreamingResponse(
+        file_content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=orders.pdf"}
+    )
+
+@router.get("/{service_order_id}", response_model=ServiceOrderRead)
+def get_service_order(
+    service_order_id: int,
+    db: Session = Depends(get_db),
+    _authenticated_user=Depends(get_current_user)
+):
+    service_order = get_service_order_by_id(db, service_order_id)
+
+    if not service_order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Service order not found with the provided ID"
+        )
+
+    return service_order
+
 @router.patch("/{service_order_id}/status", response_model=ServiceOrderRead)
 async def update_service_order_status(
     service_order_id: int,
@@ -103,69 +140,6 @@ async def update_service_order_status(
             )
 
         return order
-    except NotFoundError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail=str(error)
-        ) from error
-    except BusinessRuleError as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail=str(error)
-        ) from error
-
-@router.get("/export")
-def export_service_orders(
-    format: ExportFormat,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_admin),
-):
-    if format == ExportFormat.EXCEL:
-        file_content = export_to_excel(db, exported_by=current_user.email)
-        return StreamingResponse(
-            file_content,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=orders.xlsx"},
-        )
-    
-    file_content = export_to_pdf(db, exported_by=current_user.email)
-    return StreamingResponse(
-        file_content,
-        media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=orders.pdf"}
-    )
-
-@router.get("/{service_order_id}", response_model=ServiceOrderRead)
-def get_service_order(
-    service_order_id: int,
-    db: Session = Depends(get_db),
-    _authenticated_user=Depends(get_current_user)
-):
-    service_order = get_service_order_by_id(db, service_order_id)
-
-    if not service_order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Service order not found with the provided ID"
-        )
-
-    return service_order
-
-@router.patch("/{service_order_id}/status", response_model=ServiceOrderRead)
-def update_service_order_status(
-    service_order_id: int,
-    status_update: ServiceOrderStatusUpdate,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
-):
-    try:
-        return change_service_order_status(
-            db=db, 
-            service_order_id=service_order_id, 
-            new_status=status_update.status, 
-            current_user_id=current_user.id, 
-            note=status_update.note,
-        )
     except NotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 

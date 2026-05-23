@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
-
 class ServiceOrder(Base):
     __tablename__ = "service_orders"
 
