@@ -1,3 +1,11 @@
+import os
+
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("MAIL_USERNAME", "test@example.com")
+os.environ.setdefault("MAIL_PASSWORD", "test-password")
+os.environ.setdefault("MAIL_FROM", "test@example.com")
+os.environ.setdefault("MAIL_SUPPRESS_SEND", "true")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

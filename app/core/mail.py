@@ -10,6 +10,7 @@ mail_config = ConnectionConfig(
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
+    SUPPRESS_SEND=settings.mail_suppress_send,
 )
 
 mail = FastMail(mail_config)

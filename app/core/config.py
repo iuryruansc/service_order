@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     mail_from: str
     mail_server: str = "smtp.gmail.com"
     mail_port: int = 587
+    mail_suppress_send: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",
