@@ -14,6 +14,8 @@ Health check: [https://serviceorder-production.up.railway.app/](https://serviceo
 
 No Swagger, use **Authorize** com `username` = e-mail do usuario e `password` = senha.
 
+**Postman / Insomnia:** importe a colecao em [`docs/service_order_api.postman_collection.json`](docs/service_order_api.postman_collection.json) (veja [`docs/README.md`](docs/README.md)).
+
 ## Funcionalidades
 
 - Cadastro e listagem de usuarios (ativar/desativar)
@@ -93,11 +95,7 @@ Com o banco configurado e migrations aplicadas:
 python seed.py
 ```
 
-Credenciais de demonstracao criadas pelo seed (use apenas em ambiente de teste):
-
-| Usuario | E-mail              | Senha    |
-| ------- | ------------------- | -------- |
-| Admin   | `admin@example.com` | `123456` |
+O script cria usuario admin, tres clientes e ordens de servico com historico de status. Detalhes e uso em producao na secao [Deploy (Railway)](#deploy-railway).
 
 ## Variaveis de ambiente
 
@@ -140,14 +138,100 @@ Os testes usam SQLite isolado (`tests/conftest.py`) e definem `MAIL_SUPPRESS_SEN
 
 **CI:** cada push/PR em `main` executa `pytest` via [GitHub Actions](.github/workflows/ci.yml).
 
-## Deploy
+## Deploy (Railway)
 
 A API esta publicada no Railway:
 
-- Base: `https://serviceorder-production.up.railway.app`
-- Swagger: `https://serviceorder-production.up.railway.app/docs`
+| Recurso | URL                                                 |
+| ------- | --------------------------------------------------- |
+| Base    | https://serviceorder-production.up.railway.app      |
+| Swagger | https://serviceorder-production.up.railway.app/docs |
+| Health  | https://serviceorder-production.up.railway.app/     |
 
-O container usa o `Dockerfile`, executa migrations no startup (`entrypoint.sh`) e conecta ao PostgreSQL do ambiente.
+### Como a aplicacao sobe em producao
+
+```mermaid
+flowchart LR
+  subgraph railway [Railway]
+    IMG[Imagem Docker]
+    EP[entrypoint.sh]
+    MIG[alembic upgrade head]
+    API[uvicorn :8000]
+    DB[(PostgreSQL)]
+  end
+  IMG --> EP
+  EP -->|aguarda conexao| DB
+  EP --> MIG
+  MIG --> DB
+  EP --> API
+  API --> DB
+```
+
+1. Railway builda a imagem a partir do `Dockerfile` (Python 3.14).
+2. O `entrypoint.sh` aguarda o PostgreSQL ficar disponivel.
+3. Roda `alembic upgrade head` (schema sempre atualizado no deploy).
+4. Inicia o Uvicorn na porta `8000`.
+
+### Variaveis no painel Railway
+
+Configure em **Variables** do servico (nunca no Git):
+
+| Variavel                      | Obrigatoria | Observacao                              |
+| ----------------------------- | ----------- | --------------------------------------- |
+| `DATABASE_URL`                | Sim         | URL do addon **PostgreSQL** do Railway  |
+| `SECRET_KEY`                  | Sim         | String longa e aleatoria (producao)     |
+| `ENVIRONMENT`                 | Sim         | Use `production`                        |
+| `ALGORITHM`                   | Nao         | Padrao `HS256`                          |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Nao         | Ex.: `30`                               |
+| `MAIL_*`                      | Nao         | SMTP; necessario para e-mails em ordens |
+| `MAIL_SUPPRESS_SEND`          | Nao         | `false` em producao se usar e-mail      |
+
+O addon PostgreSQL do Railway injeta `DATABASE_URL` automaticamente quando o servico do banco esta ligado ao app.
+
+### Popular dados de demonstracao em producao
+
+O `seed.py` e **idempotente** (nao duplica se ja existir). Cria admin, clientes e ordens de exemplo.
+
+**Local ou Docker** (com banco acessivel):
+
+```powershell
+alembic upgrade head
+python seed.py
+```
+
+**No Railway** (com [Railway CLI](https://docs.railway.app/develop/cli) instalada e projeto linkado):
+
+```powershell
+railway run python seed.py
+```
+
+Credenciais criadas pelo seed — **apenas para demo/teste**:
+
+| Papel | E-mail              | Senha    |
+| ----- | ------------------- | -------- |
+| Admin | `admin@example.com` | `123456` |
+
+Clientes de exemplo: `client1@example.com`, `client2@example.com`, `client3@example.com`.
+
+> Em producao publica, troque senhas ou use apenas `POST /users/` para criar contas de teste temporarias.
+
+### Verificacao pos-deploy
+
+| Passo          | Como validar                                                   |
+| -------------- | -------------------------------------------------------------- |
+| Health         | `GET /` retorna `status: Service is running`                   |
+| Swagger        | Abrir `/docs`                                                  |
+| Auth           | `POST /auth/login` (form: `username`=e-mail, `password`=senha) |
+| Rota protegida | `GET /auth/me` com header `Authorization: Bearer <token>`      |
+| Persistencia   | Redeploy no Railway; dados no Postgres devem permanecer        |
+
+### Decisoes tecnicas
+
+- **Camadas separadas** (`routes` → `services` → `repositories`): facilita testes, regras de negocio e manutencao.
+- **JWT** para rotas protegidas; senhas com bcrypt via Passlib.
+- **PostgreSQL** em Docker e producao; SQLite apenas na suite de testes.
+- **Alembic** versiona o schema; no container, migrations rodam no `entrypoint.sh` antes do servidor subir.
+- **Docker** garante o mesmo ambiente local e no Railway.
 
 ## Endpoints principais
 
@@ -241,6 +325,23 @@ Exemplo de alteracao de status:
 ```
 
 ## Arquitetura
+
+### Camadas da aplicacao
+
+```mermaid
+flowchart LR
+  Client[Cliente HTTP] --> API[FastAPI routes]
+  API --> SVC[Services]
+  SVC --> REPO[Repositories]
+  REPO --> DB[(PostgreSQL)]
+```
+
+- **routes:** entrada HTTP, validacao e status codes
+- **services:** regras de negocio (status, permissoes, e-mail)
+- **repositories:** consultas e persistencia SQLAlchemy
+- **models / schemas:** tabelas e contratos JSON
+
+### Estrutura de pastas
 
 ```text
 app/
