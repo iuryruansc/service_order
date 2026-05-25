@@ -34,6 +34,7 @@ errors.md
 uploads/*
 !uploads/.gitkeep
 guia_fluxo_portfolio.md
+guia_frontend_react_vite.md
 
 # PyInstaller
 #   Usually these files are written by a python script from a template
