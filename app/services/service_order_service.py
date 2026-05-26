@@ -26,20 +26,21 @@ ALLOWED_STATUS_TRANSITIONS = {
     ServiceOrderStatus.CANCELED: set(),
 }
 
-def register_service_order(db: Session, service_order_data: ServiceOrderCreate):
+def register_service_order(db: Session, service_order_data: ServiceOrderCreate, responsible_user_id: int):
     client = get_client_by_id(db, service_order_data.client_id)
 
     if not client:
         raise NotFoundError("Client not found with the provided ID")
     
-    responsible_user = get_user_by_id(db, service_order_data.responsible_user_id)
+    responsible_user = get_user_by_id(db, responsible_user_id)
 
     if not responsible_user:
         raise NotFoundError("Responsible user not found with the provided ID")
 
     return create_service_order(
         db=db, 
-        service_order_data=service_order_data
+        service_order_data=service_order_data,
+        responsible_user_id=responsible_user_id
     )
 
 def change_service_order_status(db: Session, service_order_id: int, new_status: ServiceOrderStatus, current_user_id: int, note: str | None = None):

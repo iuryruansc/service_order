@@ -4,13 +4,13 @@ from app.models.service_order import ServiceOrder
 from app.schemas.service_order import ServiceOrderCreate
 from app.utils.enums import ServiceOrderPriority, ServiceOrderStatus
 
-def create_service_order(db: Session,service_order_data: ServiceOrderCreate) -> ServiceOrder:
+def create_service_order(db: Session,service_order_data: ServiceOrderCreate, responsible_user_id: int) -> ServiceOrder:
     service_order = ServiceOrder(
         title=service_order_data.title,
         description=service_order_data.description,
         priority=service_order_data.priority,
         client_id=service_order_data.client_id,
-        responsible_user_id=service_order_data.responsible_user_id,
+        responsible_user_id=responsible_user_id,
     )
 
     db.add(service_order)

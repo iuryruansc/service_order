@@ -23,7 +23,7 @@ class ServiceOrder(Base):
         nullable=False,
     )
     client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), nullable=False)
-    responsible_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    responsible_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

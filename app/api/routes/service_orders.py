@@ -25,7 +25,7 @@ async def create_service_order(
     current_user=Depends(get_current_user)
 ):
     try:
-        order = register_service_order(db, service_order_data)
+        order = register_service_order(db, service_order_data, responsible_user_id=current_user.id)
 
         await send_order_created_email(
             responsible_email=order.responsible_user.email,
