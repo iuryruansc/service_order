@@ -11,7 +11,6 @@ class ServiceOrderBase(BaseModel):
 
 class ServiceOrderCreate(ServiceOrderBase):
     client_id: int
-    responsible_user_id: int
 
 class ServiceOrderRead(ServiceOrderBase):
     id: int

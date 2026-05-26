@@ -5,7 +5,6 @@ def test_create_service_order_with_success_returns_201(client, auth_token, creat
         "description": "Test Service Order",
         "priority": "medium",
         "client_id": created_client["id"],
-        "responsible_user_id": created_user["id"],
     }
 
     response = client.post(
@@ -21,15 +20,14 @@ def test_create_service_order_with_success_returns_201(client, auth_token, creat
     assert data["description"] == payload["description"]
     assert data["priority"] == payload["priority"]
     assert data["client_id"] == payload["client_id"]
-    assert data["responsible_user_id"] == payload["responsible_user_id"]
+    assert data["responsible_user_id"] == created_user["id"]
 
-def test_create_service_order_without_auth_returns_401(client, created_client, created_user):
+def test_create_service_order_without_auth_returns_401(client, created_client):
     payload = {
         "title": "Test Service Order",
         "description": "Test Service Order",
         "priority": "medium",
         "client_id": created_client["id"],
-        "responsible_user_id": created_user["id"],
     }
 
     response = client.post("/service-orders/", json=payload)
@@ -66,31 +64,13 @@ def test_get_service_order_by_id_not_found_returns_404(client, auth_token):
     )
     assert response.status_code == 404
 
-def test_create_service_order_with_invalid_client_id_returns_404(client, auth_token, created_user):
+def test_create_service_order_with_invalid_client_id_returns_404(client, auth_token):
     headers = {"Authorization": f"Bearer {auth_token}"}
     payload = {
         "title": "Test Service Order",
         "description": "Test Service Order",
         "priority": "medium",
         "client_id": 999,  # Invalid client ID
-        "responsible_user_id": created_user["id"],
-    }
-
-    response = client.post(
-        "/service-orders/",
-        json=payload,
-        headers=headers
-    )
-    assert response.status_code == 404
-
-def test_create_service_order_with_invalid_user_id_returns_404(client, auth_token, created_client):
-    headers = {"Authorization": f"Bearer {auth_token}"}
-    payload = {
-        "title": "Test Service Order",
-        "description": "Test Service Order",
-        "priority": "medium",
-        "client_id": created_client["id"],
-        "responsible_user_id": 999,  # Invalid user ID
     }
 
     response = client.post(

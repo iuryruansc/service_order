@@ -92,7 +92,6 @@ def created_service_order(client, auth_token, created_client, created_user):
             "status": "open",
             "priority": "medium",
             "client_id": created_client["id"],
-            "responsible_user_id": created_user["id"],
         },
         headers={"Authorization": f"Bearer {auth_token}"},
     )
